@@ -2,20 +2,47 @@ import express from "express";
 import multer from "multer";
 import cors from "cors";
 import fs from "fs";
+import path from "path";
 import dotenv from "dotenv";
 import corsOptions from "./config/corsOptions.js";
-import { errorHandler, loginLimiter } from "./middleware/index.js";
 import { removeBackground } from "@imgly/background-removal-node";
+import { loginLimiter } from "./middleware/loginLimiter.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
+
+const PORT = process.env.PORT || 5000;
+const MAX_SIZE = 5 * 1024 * 1024;
 
 const app = express();
 
 app.use(cors());
 
-const PORT = process.env.PORT || 5000;
+const storage = multer.diskStorage({
+  destination: (req, file, callback) => {
+    callback(null, "uploads/");
+  },
+});
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: MAX_SIZE },
+  fileFilter: (req, file, callback) => {
+    const filetypes = /png|jpg|jpeg|webp/;
+    const mimeType = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname));
+    if (mimeType && extname) {
+      return callback(null, true);
+    }
+    callback({
+      statusCode: 400,
+      message:
+        "Image upload only supports the following filetypes - jpeg, jpg, png, webp",
+    });
+  },
+}).single("image");
+
+//const upload = multer({ dest: "uploads/" });
 
 app.listen(PORT, () => {
   const baseURL =
@@ -29,7 +56,7 @@ app.listen(PORT, () => {
 async function removeImageBackground(req, res, next) {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "Nessun file caricato" });
+      return errorHandler(400, "File not found");
     }
 
     const imgSource = req.file.path;
@@ -39,18 +66,31 @@ async function removeImageBackground(req, res, next) {
     const buffer = Buffer.from(await blob.arrayBuffer());
 
     res.json({
-      message: "Background removed successfully.",
+      message: "Your image has been processed.",
       resultImage: `data:image/png;base64,${buffer.toString("base64")}`,
     });
 
     fs.unlinkSync(imgSource);
   } catch (error) {
-    console.error("Error:", error.message);
-    res.status(500).json({ error: "Errore nella rimozione dello sfondo" });
+    next(error);
   }
 }
 
-app.post("/remove-background", upload.single("image"), removeImageBackground);
+app.post(
+  "/remove-background",
+  loginLimiter,
+  (req, res, next) => {
+    upload(req, res, function (err) {
+      if (err instanceof multer.MulterError) {
+        return next(errorHandler(400, err.message));
+      } else if (err) {
+        return next(err);
+      }
+      next();
+    });
+  },
+  removeImageBackground
+);
 
 app.all("*", (req, res) => {
   res.status(404);

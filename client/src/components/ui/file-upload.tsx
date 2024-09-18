@@ -67,6 +67,7 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
+          accept="image/*"
           onChange={(e) => handleUpload(e)}
           className="hidden"
         />
@@ -78,7 +79,8 @@ export const FileUpload = ({
             Upload Image
           </p>
           <p className="relative z-20 font-poppins font-normal text-neutral-400 dark:text-neutral-400 text-sm text-center mt-2">
-            Drag or drop your image here or click to upload
+            Drag or drop your image here or click to upload <br />
+            Max file size: 5MB
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
             {file && (

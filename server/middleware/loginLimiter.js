@@ -1,10 +1,10 @@
 import rateLimit from "express-rate-limit";
 
-const loginLimiter = rateLimit({
+export const loginLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,
   message: {
-    message: "Too many requests, please try again after 60 seconds",
+    message: "You can upload 2 images every minute, please wait and try again.",
   },
   handler: (req, res, next, options) => {
     res.status(options.statusCode).send(options.message);
@@ -12,5 +12,3 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
-export default loginLimiter;

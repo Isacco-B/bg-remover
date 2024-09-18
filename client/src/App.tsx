@@ -24,6 +24,15 @@ const App = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setImage(null);
       setResultImage(null);
       setImagePreview(null);
@@ -65,16 +74,26 @@ const App = () => {
       setResultImage(response.data.resultImage);
       toast({
         title: "Success!",
-        description: "Your image has been processed.",
+        description: response.data.message || "Your image has been processed.",
       });
       triggerConfetti();
-      setIsLoading(false);
     } catch (error) {
-      toast({
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
-        variant: "destructive",
-      });
+      if (axios.isAxiosError(error)) {
+        toast({
+          title: "Uh oh! Something went wrong.",
+          description:
+            error.response?.data?.message ||
+            "There was a problem with your request.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Uh oh! Something went wrong.",
+          description: "There was a problem with your request.",
+          variant: "destructive",
+        });
+      }
+    } finally {
       setIsLoading(false);
     }
   };
