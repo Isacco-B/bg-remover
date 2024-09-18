@@ -68,7 +68,7 @@ const App = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/remove-background",
+        `${import.meta.env.VITE_HOST}/remove-background`,
         formData
       );
       setResultImage(response.data.resultImage);
