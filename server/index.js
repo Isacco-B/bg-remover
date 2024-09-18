@@ -1,13 +1,25 @@
 import express from "express";
 import multer from "multer";
 import cors from "cors";
-import fs from "fs/promises";
-import path from "path";
+import fs from "fs";
+import fsPromises from "fs/promises";
+import path, { dirname } from "path";
 import dotenv from "dotenv";
 import corsOptions from "./config/corsOptions.js";
+import { fileURLToPath } from "url";
 import { removeBackground } from "@imgly/background-removal-node";
 import { loginLimiter } from "./middleware/loginLimiter.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const uploadsDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 dotenv.config();
 
@@ -56,7 +68,7 @@ async function removeImageBackground(req, res, next) {
     });
 
     try {
-      await fs.unlink(imgSource);
+      await fsPromises.unlink(imgSource);
     } catch (unlinkError) {
       console.error("Error deleting file:", unlinkError);
     }
