@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SparklesCore } from "@/components/ui/sparkles";
 import { AnimatePresence, motion } from "framer-motion";
@@ -34,6 +33,7 @@ export const Compare = ({
 
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  // @ts-expect-error: 'isMouseOver' is declared but not used
   const [isMouseOver, setIsMouseOver] = useState(false);
 
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
@@ -84,6 +84,7 @@ export const Compare = ({
   }
 
   const handleStart = useCallback(
+    // @ts-expect-error: 'isMouseOver' is declared but not used
     (clientX: number) => {
       if (slideMode === "drag") {
         setIsDragging(true);
