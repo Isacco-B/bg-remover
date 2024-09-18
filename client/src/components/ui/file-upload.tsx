@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ChangeEvent, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { IconUpload } from "@tabler/icons-react";
+import { Upload } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 
 const mainVariant = {
@@ -28,7 +28,7 @@ const secondaryVariant = {
 export const FileUpload = ({
   onChange,
 }: {
-  onChange?: (file: File) => void;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,7 +37,7 @@ export const FileUpload = ({
     const file = e.target.files?.[0];
     if (file) {
       setFile(file);
-      onChange?.(file);
+      onChange?.(e);
     }
   };
 
@@ -50,7 +50,6 @@ export const FileUpload = ({
     noClick: true,
     onDrop: (file) => {
       setFile(file[0]);
-      onChange?.(file[0]);
     },
     onDropRejected: (error) => {
       console.log(error);
@@ -78,7 +77,7 @@ export const FileUpload = ({
           <p className="relative z-20 font-poppins font-bold text-neutral-700 dark:text-neutral-300 text-base">
             Upload Image
           </p>
-          <p className="relative z-20 font-poppins font-normal text-neutral-400 dark:text-neutral-400 text-sm mt-2">
+          <p className="relative z-20 font-poppins font-normal text-neutral-400 dark:text-neutral-400 text-sm text-center mt-2">
             Drag or drop your image here or click to upload
           </p>
           <div className="relative w-full mt-10 max-w-xl mx-auto">
@@ -151,10 +150,10 @@ export const FileUpload = ({
                     className="font-poppins text-neutral-600 flex flex-col items-center"
                   >
                     Drop it
-                    <IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+                    <Upload className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
                   </motion.p>
                 ) : (
-                  <IconUpload className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
+                  <Upload className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
                 )}
               </motion.div>
             )}
