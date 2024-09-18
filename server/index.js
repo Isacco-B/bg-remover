@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import cors from "cors";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import dotenv from "dotenv";
 import corsOptions from "./config/corsOptions.js";
@@ -11,12 +11,11 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
 
+const app = express();
 const PORT = process.env.PORT || 5000;
 const MAX_SIZE = 5 * 1024 * 1024;
 
-const app = express();
-
-app.use(cors());
+app.use(cors(corsOptions));
 
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
@@ -36,33 +35,19 @@ const upload = multer({
     }
     callback({
       statusCode: 400,
-      message:
-        "Image upload only supports the following filetypes - jpeg, jpg, png, webp",
+      message: "Only images (.jpeg, .jpg, .png, .webp) are allowed!",
     });
   },
 }).single("image");
 
-//const upload = multer({ dest: "uploads/" });
-
-app.listen(PORT, () => {
-  const baseURL =
-    process.env.NODE_ENV === "production"
-      ? `${process.env.HOST}`
-      : `http://localhost:${PORT}`;
-
-  console.log(`Listening on ${baseURL}`);
-});
-
 async function removeImageBackground(req, res, next) {
+  if (!req.file) {
+    return errorHandler(400, "File not found");
+  }
+
   try {
-    if (!req.file) {
-      return errorHandler(400, "File not found");
-    }
-
     const imgSource = req.file.path;
-
     const blob = await removeBackground(imgSource);
-
     const buffer = Buffer.from(await blob.arrayBuffer());
 
     res.json({
@@ -70,7 +55,11 @@ async function removeImageBackground(req, res, next) {
       resultImage: `data:image/png;base64,${buffer.toString("base64")}`,
     });
 
-    fs.unlinkSync(imgSource);
+    try {
+      await fs.unlink(imgSource);
+    } catch (unlinkError) {
+      console.error("Error deleting file:", unlinkError);
+    }
   } catch (error) {
     next(error);
   }
@@ -107,4 +96,13 @@ app.use((err, req, res, next) => {
   return res
     .status(statusCode)
     .json({ success: false, statusCode, message, isError: true });
+});
+
+app.listen(PORT, () => {
+  const baseURL =
+    process.env.NODE_ENV === "production"
+      ? `${process.env.HOST}`
+      : `http://localhost:${PORT}`;
+
+  console.log(`Listening on ${baseURL}`);
 });
